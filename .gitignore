@@ -38,6 +38,8 @@ server/logs/
 server/azerothcore-wotlk/
 server/modules/*/
 !server/modules/.gitkeep
+# Cliente WoW del usuario (varios GB de MPQs + extraidos)
+server/client-data/
 
 # Client extracted data
 client-patches/extracted/

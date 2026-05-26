@@ -1,68 +1,130 @@
 /**
- * Conexion read-only opcional hacia las BDs del server (acore_auth / acore_characters).
+ * Acceso de la web a los datos del server WoW.
  *
- * Permite a la web:
- *  - leer estado de reinos y jugadores online
- *  - crear cuentas escribiendo en acore_auth.account (con hash SRP6)
+ * Dos modos:
+ *   1) Local/dev: conexion MySQL directa via ACORE_DATABASE_URL.
+ *   2) Produccion (Vercel): HTTP al Bridge via BRIDGE_URL + BRIDGE_KEY.
  *
- * Si ACORE_DATABASE_URL no esta definido, la web simplemente mostrara
- * todos los reinos como "offline" y el registro estara deshabilitado.
- * Esto permite desarrollar la web sin tener el server arrancado.
+ * El bridge expone las mismas operaciones via HTTP detras de Cloudflare Tunnel.
+ * Si ninguna esta configurada, las funciones devuelven datos vacios graciosamente.
  */
 import mysql from "mysql2/promise";
 
-const url = process.env.ACORE_DATABASE_URL;
+const BRIDGE_URL = process.env.BRIDGE_URL?.replace(/\/$/, "");
+const BRIDGE_KEY = process.env.BRIDGE_KEY ?? "";
+const DB_URL = process.env.ACORE_DATABASE_URL;
 
 declare global {
   var __acorePool: mysql.Pool | undefined;
 }
 
-export function getAcorePool(): mysql.Pool | null {
-  if (!url) return null;
+function getAcorePool(): mysql.Pool | null {
+  if (!DB_URL) return null;
   if (globalThis.__acorePool) return globalThis.__acorePool;
-
   const pool = mysql.createPool({
-    uri: url,
+    uri: DB_URL,
     connectionLimit: 3,
     enableKeepAlive: true,
   });
-
   if (process.env.NODE_ENV !== "production") {
     globalThis.__acorePool = pool;
   }
   return pool;
 }
 
-/**
- * Cuenta jugadores online por reino.
- * Lee de acore_characters.characters donde `online = 1`.
- */
-export async function fetchOnlinePlayers(): Promise<
-  Record<number, { total: number; alliance: number; horde: number }>
-> {
+async function bridgeFetch(path: string, init?: RequestInit): Promise<Response | null> {
+  if (!BRIDGE_URL || !BRIDGE_KEY) return null;
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 5000);
+    const res = await fetch(`${BRIDGE_URL}${path}`, {
+      ...init,
+      signal: ctrl.signal,
+      headers: {
+        ...init?.headers,
+        "X-Bridge-Key": BRIDGE_KEY,
+      },
+    });
+    clearTimeout(timer);
+    return res;
+  } catch {
+    return null;
+  }
+}
+
+/* ============================================================
+   Jugadores online
+   ============================================================ */
+export interface OnlineStats {
+  total: number;
+  alliance: number;
+  horde: number;
+}
+
+export async function fetchOnlinePlayers(): Promise<Record<number, OnlineStats>> {
+  // 1) Intentar via bridge (Vercel-friendly)
+  const res = await bridgeFetch("/stats/online");
+  if (res && res.ok) {
+    const data = (await res.json()) as { total: number; alliance: number; horde: number };
+    return { 1: { total: data.total, alliance: data.alliance, horde: data.horde } };
+  }
+
+  // 2) Fallback: MySQL directo (dev local)
   const pool = getAcorePool();
   if (!pool) return {};
 
-  const [rows] = await pool.query<mysql.RowDataPacket[]>(`
-    SELECT
-      c.online,
-      c.race,
-      COUNT(*) as count
-    FROM acore_characters.characters c
-    WHERE c.online = 1
-    GROUP BY c.race
-  `);
-
-  // Razas Alianza: 1,3,4,7,11  |  Horda: 2,5,6,8,10
-  const alliance = new Set([1, 3, 4, 7, 11]);
-  const result: Record<number, { total: number; alliance: number; horde: number }> =
-    { 1: { total: 0, alliance: 0, horde: 0 } };
-
-  for (const row of rows) {
-    const c = Number(row.count);
-    result[1].total += c;
-    if (alliance.has(Number(row.race))) result[1].alliance += c;
-    else result[1].horde += c;
+  try {
+    const conn = await pool.getConnection();
+    try {
+      await conn.query("USE acore_characters");
+      const [rows] = await conn.query<mysql.RowDataPacket[]>(`
+        SELECT race, COUNT(*) as count
+        FROM characters
+        WHERE online = 1
+        GROUP BY race
+      `);
+      const ALLY = new Set([1, 3, 4, 7, 11]);
+      const stat: OnlineStats = { total: 0, alliance: 0, horde: 0 };
+      for (const r of rows) {
+        const c = Number(r.count);
+        stat.total += c;
+        if (ALLY.has(Number(r.race))) stat.alliance += c;
+        else stat.horde += c;
+      }
+      return { 1: stat };
+    } finally {
+      conn.release();
+    }
+  } catch {
+    return {};
   }
-  return result;
+}
+
+/* ============================================================
+   Registro de cuenta
+   ============================================================ */
+export interface RegisterResult {
+  ok: boolean;
+  username?: string;
+  error?: string;
+  status: number;
+}
+
+export async function registerAccount(
+  username: string,
+  password: string,
+  email: string,
+): Promise<RegisterResult> {
+  // Via bridge si esta disponible
+  const res = await bridgeFetch("/accounts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password, email }),
+  });
+  if (res) {
+    const data = (await res.json()) as { ok: boolean; username?: string; error?: string };
+    return { ...data, status: res.status };
+  }
+  // Sin bridge ni DB → no se puede registrar
+  return { ok: false, error: "Servicio de registro no disponible", status: 503 };
 }

@@ -87,6 +87,25 @@ services:
         /azerothcore/env/dist/bin/mmaps_generator
         echo "=== EXTRACT DONE ==="
 
+  # Bridge HTTP API: expone read-queries + registro de cuentas
+  # via HTTP (puerto 4000) para que Cloudflare Tunnel lo exponga
+  # a internet y Vercel lo consuma desde la web publica.
+  # Ver docs/cloudflare-tunnel.md para la configuracion.
+  ac-bridge:
+    build: ./bridge
+    image: ebonhold/bridge:latest
+    container_name: ebonhold-bridge
+    restart: unless-stopped
+    depends_on:
+      ac-database:
+        condition: service_healthy
+    environment:
+      BRIDGE_PORT: "4000"
+      BRIDGE_KEY: "${BRIDGE_KEY:-changeme-set-in-env}"
+      ACORE_DATABASE_URL: "mysql://root:azerothcore@ac-database:3306/"
+    ports:
+      - "127.0.0.1:4000:4000"
+
   ac-worldserver:
     image: acore/ac-wotlk-worldserver:14.0.0-dev
     container_name: azerothcore-worldserver

@@ -6,6 +6,16 @@ Formato: el más reciente arriba.
 
 ---
 
+## 2026-05-26 — 0.3.0 · mmaps + registro real + bridge para Cloudflare Tunnel
+
+- **mmaps regenerados** (3780 archivos). Pathfinding de NPCs operativo. Bug: el formato del config no era YAML flat, era YAML nested bajo `mmapsConfig:` (descubierto leyendo Config.cpp del core).
+- **`POST /api/auth/register`** real con SRP6 + validación + INSERT en `acore_auth.account`. Form en `/registrarse` activado con client component (loading state, validación, banner de resultado).
+- **Bridge HTTP** (`server/bridge/`): Hono + mysql2, ~150 líneas. Expone `/health`, `/stats/online`, `/accounts/exists/:user`, `POST /accounts`. Auth con header `X-Bridge-Key`. End-to-end probado: crear cuenta `BRIDGETEST` vía HTTP → aparece en MySQL.
+- **Servicio `ac-bridge`** en docker-compose, build local desde `./bridge/Dockerfile`, expuesto solo en `127.0.0.1:4000`.
+- **`web/src/lib/db/acore.ts`** refactor: intenta bridge primero (Vercel-friendly), fallback a MySQL directo (dev local). Misma estrategia para `fetchOnlinePlayers()` y `registerAccount()`.
+- **`docs/cloudflare-tunnel.md`** completo: arquitectura, instalar cloudflared, URL temporal vs dominio propio, config en Vercel, troubleshooting, cómo apagar todo.
+- Detalles ver [`2026-05-26-mmaps-register-bridge.md`](2026-05-26-mmaps-register-bridge.md).
+
 ## 2026-05-26 — 0.2.0 · Worldserver vivo + cuentas SRP6 + servidor jugable
 
 - 🎮 **Worldserver arriba**: `AzerothCore ready...` — `WORLD: World Initialized In 0 Minutes 18 Seconds`. Authserver escuchando en 3724, worldserver en 8085.
