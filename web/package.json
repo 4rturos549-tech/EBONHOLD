@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "sync-content": "node -e \"require('fs').cpSync('../desarrollo','content/desarrollo',{recursive:true,force:true})\"",
+    "sync-content": "node scripts/sync-content.mjs",
     "predev": "npm run sync-content",
     "prebuild": "npm run sync-content",
     "dev": "next dev",
