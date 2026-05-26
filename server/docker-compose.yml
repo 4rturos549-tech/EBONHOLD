@@ -58,15 +58,34 @@ services:
       AC_CHARACTER_DATABASE_INFO: "ac-database;3306;root;azerothcore;acore_characters"
     restart: "no"
 
-  ac-tools:
+  # Extraccion de datos del cliente WoW (mapas, dbc, vmaps, mmaps).
+  # Se corre UNA VEZ tras copiar el cliente a client-data/.
+  # Tarda 30-50 min. Despues no se usa nunca mas.
+  #
+  # Uso:
+  #   docker compose --profile extract up ac-extract
+  ac-extract:
     image: acore/ac-wotlk-tools:14.0.0-dev
-    container_name: azerothcore-tools
-    profiles: ["tools"]
+    container_name: ebonhold-extract
+    profiles: ["extract"]
     volumes:
-      # Cliente 3.3.5a (carpeta completa montada como /azerothcore/env/dist/data)
       - ./client-data:/azerothcore/env/dist/data
-    working_dir: /azerothcore/env/dist
-    # La imagen ya define los comandos de extraccion; al arrancarla los ejecuta.
+    working_dir: /azerothcore/env/dist/data
+    entrypoint: ["bash", "-c"]
+    command:
+      - |
+        set -e
+        echo "=== 1/4 map_extractor (~3 min) ==="
+        /azerothcore/env/dist/bin/map_extractor
+        echo "=== 2/4 vmap4_extractor (~10 min) ==="
+        /azerothcore/env/dist/bin/vmap4_extractor
+        echo "=== 3/4 vmap4_assembler (~3 min) ==="
+        mkdir -p vmaps
+        /azerothcore/env/dist/bin/vmap4_assembler Buildings vmaps
+        echo "=== 4/4 mmaps_generator (~20 min) ==="
+        mkdir -p mmaps
+        /azerothcore/env/dist/bin/mmaps_generator
+        echo "=== EXTRACT DONE ==="
 
   ac-worldserver:
     image: acore/ac-wotlk-worldserver:14.0.0-dev
