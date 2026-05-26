@@ -1,0 +1,61 @@
+# Node
+node_modules/
+.next/
+out/
+dist/
+build/
+.turbo/
+.vercel/
+
+# Contenido sincronizado por scripts (la fuente vive en /desarrollo)
+web/content/
+
+# Env
+.env
+.env.local
+.env.*.local
+*.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE / local
+.vscode/
+.idea/
+.claude/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Server data (pesado, no va a git)
+server/data/
+server/env/
+server/var/
+server/logs/
+server/azerothcore-wotlk/
+server/modules/*/
+!server/modules/.gitkeep
+
+# Client extracted data
+client-patches/extracted/
+client-patches/maps/
+client-patches/mmaps/
+client-patches/vmaps/
+client-patches/dbc/
+client-patches/*.MPQ
+
+# Launcher build artifacts
+launcher/release/
+launcher/out/
+
+# MySQL/DB dumps
+*.sql.gz
+*.dump
+
+# Secrets
+*.pem
+*.key
+*-secret.*

@@ -1,0 +1,105 @@
+# AzerothCore WoTLK 3.3.5a - stack de desarrollo local
+# Basado en las imagenes oficiales: https://www.azerothcore.org/wiki/install-with-docker
+#
+# Uso:
+#   1) Asegurate de que Docker Desktop esta corriendo.
+#   2) Coloca el cliente 3.3.5a limpio (carpeta WoW completa) en client-data/
+#      o ajusta la ruta del volumen "client-data" en el servicio ac-tools.
+#   3) Primera vez:
+#         docker compose --profile tools up ac-tools     # extrae mapas/dbc/vmaps/mmaps
+#         docker compose up -d ac-database               # arranca MySQL
+#         docker compose run --rm ac-db-import           # crea/actualiza las 3 BDs
+#         docker compose up -d                           # arranca authserver + worldserver
+#   4) Para entrar al worldserver (consola GM):
+#         docker attach azerothcore-worldserver
+#   5) Logs:
+#         docker compose logs -f ac-worldserver
+#
+# Puertos publicados:
+#   3724  -> authserver (login)
+#   8085  -> worldserver (juego)
+#   3306  -> MySQL (solo para herramientas; no exponer en produccion)
+#   7878  -> SOAP (opcional, para integrar con la web)
+
+services:
+  ac-database:
+    image: mysql:8.4
+    container_name: azerothcore-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: azerothcore
+      MYSQL_ROOT_HOST: "%"
+    command: >-
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --sql-mode=""
+    volumes:
+      - ac-db-data:/var/lib/mysql
+    ports:
+      - "127.0.0.1:3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pazerothcore"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  ac-db-import:
+    image: acore/ac-wotlk-db-import:14.0.0-dev
+    container_name: azerothcore-db-import
+    depends_on:
+      ac-database:
+        condition: service_healthy
+    environment:
+      AC_LOGIN_DATABASE_INFO: "ac-database;3306;root;azerothcore;acore_auth"
+      AC_WORLD_DATABASE_INFO: "ac-database;3306;root;azerothcore;acore_world"
+      AC_CHARACTER_DATABASE_INFO: "ac-database;3306;root;azerothcore;acore_characters"
+    restart: "no"
+
+  ac-tools:
+    image: acore/ac-wotlk-tools:14.0.0-dev
+    container_name: azerothcore-tools
+    profiles: ["tools"]
+    volumes:
+      # Cliente 3.3.5a (carpeta completa montada como /azerothcore/env/dist/data)
+      - ./client-data:/azerothcore/env/dist/data
+    working_dir: /azerothcore/env/dist
+    # La imagen ya define los comandos de extraccion; al arrancarla los ejecuta.
+
+  ac-worldserver:
+    image: acore/ac-wotlk-worldserver:14.0.0-dev
+    container_name: azerothcore-worldserver
+    restart: unless-stopped
+    depends_on:
+      ac-database:
+        condition: service_healthy
+    tty: true
+    stdin_open: true
+    ports:
+      - "8085:8085"
+      - "7878:7878"
+    environment:
+      AC_LOGIN_DATABASE_INFO: "ac-database;3306;root;azerothcore;acore_auth"
+      AC_WORLD_DATABASE_INFO: "ac-database;3306;root;azerothcore;acore_world"
+      AC_CHARACTER_DATABASE_INFO: "ac-database;3306;root;azerothcore;acore_characters"
+      AC_DATA_DIR: "/azerothcore/env/dist/data"
+    volumes:
+      - ./client-data:/azerothcore/env/dist/data:ro
+      - ./var/worldserver:/azerothcore/env/dist/var
+
+  ac-authserver:
+    image: acore/ac-wotlk-authserver:14.0.0-dev
+    container_name: azerothcore-authserver
+    restart: unless-stopped
+    depends_on:
+      ac-database:
+        condition: service_healthy
+    ports:
+      - "3724:3724"
+    environment:
+      AC_LOGIN_DATABASE_INFO: "ac-database;3306;root;azerothcore;acore_auth"
+    volumes:
+      - ./var/authserver:/azerothcore/env/dist/var
+
+volumes:
+  ac-db-data:

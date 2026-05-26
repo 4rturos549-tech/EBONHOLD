@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a8ddf5"/>
+      <stop offset="50%" stop-color="#6ec8f0"/>
+      <stop offset="100%" stop-color="#3a7fa5"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d9f4ff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#6ec8f0" stop-opacity="0.4"/>
+    </linearGradient>
+    <radialGradient id="g3" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#6ec8f0" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#6ec8f0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Glow de fondo -->
+  <circle cx="32" cy="32" r="30" fill="url(#g3)"/>
+
+  <!-- Diamante exterior -->
+  <path d="M32 3 L61 32 L32 61 L3 32 Z"
+        fill="none" stroke="url(#g1)" stroke-width="1.5" stroke-linejoin="miter"/>
+
+  <!-- Diamante intermedio -->
+  <path d="M32 11 L53 32 L32 53 L11 32 Z"
+        fill="#07101a" stroke="#3a7fa5" stroke-width="1"/>
+
+  <!-- Cristal vertical (Frostmourne abstracto) -->
+  <path d="M32 17 L36 32 L32 47 L28 32 Z"
+        fill="url(#g2)" stroke="#a8ddf5" stroke-width="0.5"/>
+
+  <!-- Highlight central -->
+  <path d="M32 17 L32 47" stroke="#ffffff" stroke-width="0.5" opacity="0.6"/>
+
+  <!-- Cuatro puntas brillantes -->
+  <circle cx="32" cy="3" r="1.5" fill="#a8ddf5"/>
+  <circle cx="61" cy="32" r="1.5" fill="#a8ddf5"/>
+  <circle cx="32" cy="61" r="1.5" fill="#a8ddf5"/>
+  <circle cx="3" cy="32" r="1.5" fill="#a8ddf5"/>
+</svg>
