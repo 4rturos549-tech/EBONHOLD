@@ -6,6 +6,19 @@ Formato: el más reciente arriba.
 
 ---
 
+## 2026-05-26 — 0.1.1 · Server stack live (BD operativa end-to-end)
+
+- **MySQL 8.0 + AzerothCore Docker stack operativo** en local. Fix: bajado de 8.4 a 8.0 porque 8.4 quitó `default-authentication-plugin=mysql_native_password` que AzerothCore necesita.
+- **4 BDs creadas con datos reales**: `acore_auth` (18 tablas + realmlist), `acore_world` (298 tablas, 235 MB de seeds), `acore_characters` (106 tablas), `ebonhold_web` (8 tablas Drizzle).
+- **Realmlist personalizado** con 3 reinos: Acherus PvE (8085), Wyrmrest PvP (8086), Crystalsong RP (8087).
+- **`drizzle-kit push`** ejecutado contra la BD real → schema TS materializado en MySQL.
+- **APIs probadas end-to-end**: `/api/realms` y `/api/news` devolviendo JSON real desde BD + filesystem.
+- **`server/start.ps1`** PowerShell helper idempotente: verifica Docker, arranca MySQL, espera healthy, importa BDs, crea `ebonhold_web`, corre Drizzle. Soporta `-Full` y `-Reset`.
+- **`server/stop.ps1`** para detener preservando volúmenes.
+- **`server/README.md`** rewrite completo con TL;DR, tabla de estado, troubleshooting.
+- **`web/.env.local`** local-only configurado apuntando a la BD local.
+- Detalles ver [`2026-05-26-server-stack-live.md`](2026-05-26-server-stack-live.md).
+
 ## 2026-05-26 — 0.1.0 · APIs reales + primera release del launcher
 
 - **API `/api/realms`** en la web: combina datos estáticos del config con jugadores online desde `acore_characters.characters` cuando hay BD conectada. CORS abierto, cache CDN 30s, fail-safe sin BD.

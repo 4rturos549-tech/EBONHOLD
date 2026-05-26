@@ -23,7 +23,9 @@
 
 services:
   ac-database:
-    image: mysql:8.4
+    # MySQL 8.0 (no 8.4) — AzerothCore necesita el plugin mysql_native_password
+    # que 8.4 eliminó por defecto.
+    image: mysql:8.0
     container_name: azerothcore-mysql
     restart: unless-stopped
     environment:
