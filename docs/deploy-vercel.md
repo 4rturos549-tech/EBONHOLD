@@ -28,10 +28,10 @@ git push -u origin main
 1. Entra a https://vercel.com/new
 2. Click en **Import Git Repository** → elige tu repo `ebonhold`.
 3. En **Configure Project**:
-   - **Framework Preset**: Next.js (debería detectarse solo).
-   - **Root Directory**: deja `./` — el `vercel.json` de la raíz ya redirige al subdirectorio `web/`.
-   - **Build Command**: deja el default (lo coge del `vercel.json`).
-   - **Output Directory**: deja el default.
+   - **Root Directory**: **HAZ CLIC EN "EDIT" y SELECCIONA `web`**. Es lo más importante. Vercel necesita encontrar el `package.json` de Next.js, que vive en `web/`.
+   - **Framework Preset**: Next.js (lo detecta automáticamente una vez que pones el root correcto).
+   - **Build / Install / Output Commands**: deja los defaults.
+   - Aunque el "Root Directory" sea `web/`, Vercel clona el repo entero, así que el script `sync-content` puede acceder a `../desarrollo/` sin problema.
 4. **Environment Variables** (importante — clic en "Add"):
 
 | Variable | Valor | Notas |
