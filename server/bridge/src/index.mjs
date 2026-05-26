@@ -62,6 +62,21 @@ function calculateSrp6Verifier(username, password) {
   return { salt, verifier: bigintToLE32(modPow(SRP_G, x, SRP_N)) };
 }
 
+function computeVerifierFromSalt(username, password, salt) {
+  const upper = username.toUpperCase() + ":" + password.toUpperCase();
+  const h1 = createHash("sha1").update(upper).digest();
+  const h2 = createHash("sha1").update(Buffer.concat([salt, h1])).digest();
+  const x = BigInt("0x" + Buffer.from(h2).reverse().toString("hex"));
+  return bigintToLE32(modPow(SRP_G, x, SRP_N));
+}
+
+function constantTimeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+  return diff === 0;
+}
+
 // --- Pool MySQL compartido ---
 const pool = mysql.createPool({
   uri: DB_URL,
@@ -163,6 +178,38 @@ app.post("/accounts", async (c) => {
   );
 
   return c.json({ ok: true, username });
+});
+
+// Verificar credenciales sin crear sesion (login simple)
+app.post("/accounts/verify", async (c) => {
+  let body;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ ok: false, error: "JSON invalido" }, 400);
+  }
+  const username = (body.username ?? "").toUpperCase().trim();
+  const password = body.password ?? "";
+  if (!/^[A-Z0-9_]{3,16}$/.test(username) || password.length < 6) {
+    return c.json({ ok: false, error: "Credenciales invalidas" }, 401);
+  }
+
+  const rows = await query(
+    "SELECT id, salt, verifier FROM account WHERE username = ? LIMIT 1",
+    [username],
+  );
+  if (rows.length === 0) {
+    return c.json({ ok: false, error: "Credenciales invalidas" }, 401);
+  }
+  const row = rows[0];
+  const storedSalt = Buffer.isBuffer(row.salt) ? row.salt : Buffer.from(row.salt);
+  const storedVerifier = Buffer.isBuffer(row.verifier) ? row.verifier : Buffer.from(row.verifier);
+  const computed = computeVerifierFromSalt(username, password, storedSalt);
+
+  if (!constantTimeEqual(computed, storedVerifier)) {
+    return c.json({ ok: false, error: "Credenciales invalidas" }, 401);
+  }
+  return c.json({ ok: true, username, accountId: row.id });
 });
 
 serve({ fetch: app.fetch, port: PORT, hostname: "0.0.0.0" });

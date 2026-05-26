@@ -6,6 +6,24 @@ Formato: el más reciente arriba.
 
 ---
 
+## 2026-05-26 — 0.4.0 · Launcher con registro + /login web + plan cloud
+
+- **Launcher: vista "Crear cuenta"** con form completo, fetch a `https://ebonhold.vercel.app/api/auth/register` (la web proxy-a al bridge → el launcher nunca conoce el BRIDGE_KEY). Sidebar item nuevo.
+- **`/login` real** en la web: form + endpoint `POST /api/auth/login` con verificación SRP6 (recomputa verifier con salt almacenado, comparación constant-time). Funciona en local y via bridge.
+- **Bridge updated**: nuevo `POST /accounts/verify` con la misma lógica de verificación. Tanto `registerAccount()` como `verifyAccount()` exportados desde `web/src/lib/db/acore.ts`.
+- **Nav**: `Login` añadido a `utilityLinks` (sustituye `Radio` por simplicidad).
+- **`/api/realms`** pulido: solo Acherus (único worldserver activo) muestra `status: online` con player count; Wyrmrest y Crystalsong como `offline`.
+- **`docs/cloud-deployment-oracle.md`** — guía paso a paso 14 secciones para mover TODO a **Oracle Cloud Free Tier** (24/7, gratis, sin PC encendido):
+  - Por qué Oracle gana al resto (24GB RAM ARM Always Free)
+  - Creación de cuenta + VM ARM Ampere
+  - Firewall (VCN Security List + iptables)
+  - Docker + clonar repo + SCP del cliente extraído (~6-8GB)
+  - cloudflared como systemd service persistente
+  - Vercel env vars + redeploy
+  - Backups automáticos con cron
+  - Troubleshooting + costos ($0 forever)
+- Detalles ver [`2026-05-26-login-launcher-cloud.md`](2026-05-26-login-launcher-cloud.md).
+
 ## 2026-05-26 — 0.3.0 · mmaps + registro real + bridge para Cloudflare Tunnel
 
 - **mmaps regenerados** (3780 archivos). Pathfinding de NPCs operativo. Bug: el formato del config no era YAML flat, era YAML nested bajo `mmapsConfig:` (descubierto leyendo Config.cpp del core).

@@ -111,7 +111,7 @@ export const secondaryNav: NavGroup[] = [
 ];
 
 export const utilityLinks: NavItem[] = [
+  { label: "Login", href: "/login" },
   { label: "Donar", href: "/donar" },
-  { label: "Radio", href: "/radio" },
   { label: "Reglas", href: "/reglas" },
 ];

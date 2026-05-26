@@ -6,8 +6,9 @@ import { NewsPage } from "@/pages/News";
 import { PatchesPage } from "@/pages/Patches";
 import { SettingsPage } from "@/pages/Settings";
 import { AboutPage } from "@/pages/About";
+import { RegisterPage } from "@/pages/Register";
 
-export type Route = "home" | "news" | "patches" | "settings" | "about";
+export type Route = "home" | "news" | "register" | "patches" | "settings" | "about";
 
 export function App() {
   const [route, setRoute] = useState<Route>("home");
@@ -20,6 +21,7 @@ export function App() {
         <main className="flex-1 overflow-hidden">
           {route === "home" && <HomePage />}
           {route === "news" && <NewsPage />}
+          {route === "register" && <RegisterPage />}
           {route === "patches" && <PatchesPage />}
           {route === "settings" && <SettingsPage />}
           {route === "about" && <AboutPage />}

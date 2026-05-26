@@ -1,10 +1,11 @@
-import { Home, Newspaper, Package, Settings, Info, MessageSquare, Globe } from "lucide-react";
+import { Home, Newspaper, UserPlus, Package, Settings, Info, MessageSquare, Globe } from "lucide-react";
 import type { Route } from "@/App";
 import { brand } from "@shared/brand";
 
 const items: { id: Route; label: string; icon: typeof Home }[] = [
   { id: "home", label: "Inicio", icon: Home },
   { id: "news", label: "Noticias", icon: Newspaper },
+  { id: "register", label: "Crear cuenta", icon: UserPlus },
   { id: "patches", label: "Parches", icon: Package },
   { id: "settings", label: "Ajustes", icon: Settings },
   { id: "about", label: "Acerca de", icon: Info },

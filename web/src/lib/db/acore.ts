@@ -125,6 +125,37 @@ export async function registerAccount(
     const data = (await res.json()) as { ok: boolean; username?: string; error?: string };
     return { ...data, status: res.status };
   }
-  // Sin bridge ni DB → no se puede registrar
   return { ok: false, error: "Servicio de registro no disponible", status: 503 };
+}
+
+/* ============================================================
+   Verificacion de credenciales (login)
+   ============================================================ */
+export interface VerifyResult {
+  ok: boolean;
+  username?: string;
+  accountId?: number;
+  error?: string;
+  status: number;
+}
+
+export async function verifyAccount(
+  username: string,
+  password: string,
+): Promise<VerifyResult> {
+  const res = await bridgeFetch("/accounts/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+  if (res) {
+    const data = (await res.json()) as {
+      ok: boolean;
+      username?: string;
+      accountId?: number;
+      error?: string;
+    };
+    return { ...data, status: res.status };
+  }
+  return { ok: false, error: "Servicio de login no disponible", status: 503 };
 }
