@@ -6,6 +6,16 @@ Formato: el más reciente arriba.
 
 ---
 
+## 2026-05-26 — 0.2.0 · Worldserver vivo + cuentas SRP6 + servidor jugable
+
+- 🎮 **Worldserver arriba**: `AzerothCore ready...` — `WORLD: World Initialized In 0 Minutes 18 Seconds`. Authserver escuchando en 3724, worldserver en 8085.
+- Extracción del cliente WoW completada (3 de 4 fases): `dbc/`, `maps/`, `Buildings/`, `vmaps/`. `mmaps_generator` falló por config, pendiente pero no bloquea.
+- **SRP6 propio implementado** en `web/src/lib/auth/srp6.ts` — algoritmo puro sin dependencias, parámetros tomados del source de AzerothCore. Reusable para `/api/auth/register`.
+- **Script CLI `web/scripts/create-account.mjs`** para crear cuentas con hash correcto desde la consola.
+- **Cuentas creadas**: `GM/12345` (gmlevel 3) y `TEST/test` (jugador).
+- Aprendizaje: `MSYS_NO_PATHCONV=1` necesario en Git Bash Windows para paths absolutos `/...` en docker volumes.
+- Detalles ver [`2026-05-26-server-live-cuentas.md`](2026-05-26-server-live-cuentas.md).
+
 ## 2026-05-26 — 0.1.1 · Server stack live (BD operativa end-to-end)
 
 - **MySQL 8.0 + AzerothCore Docker stack operativo** en local. Fix: bajado de 8.4 a 8.0 porque 8.4 quitó `default-authentication-plugin=mysql_native_password` que AzerothCore necesita.
