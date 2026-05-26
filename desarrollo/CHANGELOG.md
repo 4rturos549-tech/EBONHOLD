@@ -6,6 +6,21 @@ Formato: el más reciente arriba.
 
 ---
 
+## 2026-05-26 — 0.0.7 · Launcher Electron bootstrap
+
+- **Launcher de escritorio** completo: Electron + Vite + React 19 + TS + Tailwind v4 (mismo stack que la web).
+- **Arquitectura limpia** main/preload/renderer con tipos compartidos en `src/shared/`. BridgeAPI tipada end-to-end con contextBridge.
+- **5 vistas**: Home (hero + botón JUGAR + noticias + estado de reinos), News, Patches, Settings (carpeta, idioma, updater), About.
+- **Title bar custom** frameless con logo flotante, controles propios, drag region.
+- **Botón JUGAR** verde con shimmer animado: escribe `realmlist.wtf` y lanza `Wow.exe`.
+- **Persistencia local** de config en JSON en userData.
+- **Auto-update** vía GitHub Releases con `electron-updater` apuntando a `4rturos549-tech/EBONHOLD`.
+- **electron-builder** configurado para Windows (NSIS), macOS (DMG x64+arm64), Linux (AppImage).
+- **GitHub Actions** workflow `launcher-release.yml` que builda los 3 OS en paralelo al hacer `git tag launcher-v*`.
+- **Theme idéntico a la web**: frost cyan + obsidiana + verde necrótico. Logo SVG compartido. Animaciones reutilizadas (fade-in-up, logo-float, status-pulse) + nuevas (bg-pan, shimmer en botón JUGAR).
+- Build verificado: ✓ main 6.58 KB, preload 1.39 KB, renderer 596 KB, sin errores TypeScript.
+- Detalles ver [`2026-05-26-launcher-bootstrap.md`](2026-05-26-launcher-bootstrap.md).
+
 ## 2026-05-26 — 0.0.6 · Logo SVG + animaciones + BD + deploy a Vercel
 
 - **Logo SVG propio**: diamante con cristal frost central tipo Frostmourne. Componente React parametrizable + favicon SVG.
