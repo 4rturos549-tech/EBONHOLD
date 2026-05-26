@@ -1,0 +1,51 @@
+appId: com.ebonhold.launcher
+productName: Ebonhold Launcher
+copyright: Copyright © 2026 Ebonhold
+asar: true
+
+directories:
+  output: release/${version}
+  buildResources: resources
+
+files:
+  - "out/**/*"
+  - "package.json"
+  - "!**/*.{md,map}"
+
+# Auto-update apunta a GitHub Releases.
+# Sustituye OWNER/REPO con tu org/repo de GitHub.
+publish:
+  provider: github
+  owner: 4rturos549-tech
+  repo: EBONHOLD
+  releaseType: release
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: resources/icon.ico
+  artifactName: ${productName}-Setup-${version}.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  allowElevation: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: Ebonhold
+
+mac:
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+  category: public.app-category.games
+  icon: resources/icon.icns
+
+linux:
+  target:
+    - target: AppImage
+      arch: [x64]
+  icon: resources/icon.png
+  category: Game
