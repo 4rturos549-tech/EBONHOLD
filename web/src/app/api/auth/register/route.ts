@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 import { calculateSrp6Verifier } from "@/lib/auth/srp6";
+import { registerAccount } from "@/lib/db/acore";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,11 +36,11 @@ export async function POST(req: Request) {
     return json({ ok: false, error: "Body JSON invalido" }, 400);
   }
 
-  const username = body.username?.trim().toUpperCase();
+  const username = body.username?.trim().toUpperCase() ?? "";
   const password = body.password ?? "";
   const email = (body.email ?? "").trim().toLowerCase();
 
-  if (!username || !USERNAME_RE.test(username)) {
+  if (!USERNAME_RE.test(username)) {
     return json(
       { ok: false, error: "Nombre de usuario invalido (3-16 chars, A-Z 0-9 _)" },
       400,
@@ -52,21 +53,29 @@ export async function POST(req: Request) {
     return json({ ok: false, error: "Email invalido" }, 400);
   }
 
-  const url = process.env.ACORE_DATABASE_URL;
-  if (!url) {
+  // 1) Si BRIDGE_URL esta configurado (caso Vercel) -> proxy via bridge
+  if (process.env.BRIDGE_URL) {
+    const result = await registerAccount(username, password, email);
+    return json(result, result.status);
+  }
+
+  // 2) Fallback: MySQL directo (caso dev local con ACORE_DATABASE_URL)
+  const dbUrl = process.env.ACORE_DATABASE_URL;
+  if (!dbUrl) {
     return json(
-      { ok: false, error: "Registro no disponible: el servidor de juego no esta accesible." },
+      {
+        ok: false,
+        error:
+          "Registro no disponible: configura BRIDGE_URL (produccion) o ACORE_DATABASE_URL (local).",
+      },
       503,
     );
   }
 
-  // Conexion dedicada (no pool — request es one-shot)
   let conn: mysql.Connection | null = null;
   try {
-    // ACORE_DATABASE_URL puede o no incluir el database; lo forzamos a acore_auth
-    conn = await mysql.createConnection(url.replace(/\/[^/]*$/, "/acore_auth"));
+    conn = await mysql.createConnection(dbUrl.replace(/\/[^/]*$/, "/acore_auth"));
 
-    // Comprobar duplicado
     const [rows] = await conn.query<mysql.RowDataPacket[]>(
       "SELECT id FROM account WHERE username = ? LIMIT 1",
       [username],
@@ -75,10 +84,8 @@ export async function POST(req: Request) {
       return json({ ok: false, error: "El nombre de usuario ya esta en uso" }, 409);
     }
 
-    // SRP6
     const { salt, verifier } = calculateSrp6Verifier(username, password);
 
-    // INSERT
     await conn.execute(
       `INSERT INTO account
        (username, salt, verifier, reg_mail, email, joindate, expansion)
@@ -89,10 +96,7 @@ export async function POST(req: Request) {
     return json({ ok: true, username });
   } catch (err) {
     console.error("[api/auth/register]", err);
-    return json(
-      { ok: false, error: "Error interno creando la cuenta" },
-      500,
-    );
+    return json({ ok: false, error: "Error interno creando la cuenta" }, 500);
   } finally {
     if (conn) await conn.end().catch(() => undefined);
   }
