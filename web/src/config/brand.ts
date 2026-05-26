@@ -10,7 +10,7 @@ export const brand = {
   expansion: "Wrath of the Lich King 3.3.5a",
   language: "es" as const,
   locale: "es-ES",
-  url: "https://ebonhold.example.com",
+  url: "https://ebonhold.vercel.app",
   realmlist: "play.ebonhold.example.com",
   social: {
     discord: "https://discord.gg/",

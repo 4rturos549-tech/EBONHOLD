@@ -1,27 +1,74 @@
+import { useEffect, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
+import { fetchNews, type ApiNewsItem } from "@/lib/api";
 
-const placeholder = [
-  { id: 1, title: "Bienvenido a Ebonhold", date: "Próximamente", excerpt: "Estamos preparando el lanzamiento. Únete al Discord para enterarte primero." },
-  { id: 2, title: "Roadmap publicado", date: "Próximamente", excerpt: "Consulta el plan de desarrollo en la web." },
-  { id: 3, title: "Comunidad creciendo", date: "Próximamente", excerpt: "Ya somos un equipo activo trabajando en el contenido custom." },
-];
+function formatDate(iso: string): string {
+  if (!iso) return "";
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
 
-export function NewsList() {
+export function NewsList({ limit = 5 }: { limit?: number }) {
+  const [items, setItems] = useState<ApiNewsItem[] | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetchNews(limit).then((data) => {
+      if (alive) setItems(data);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [limit]);
+
+  if (items === null) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="panel p-4">
+            <div className="h-3 w-20 bg-[var(--color-bg-elevated)] rounded animate-pulse" />
+            <div className="h-4 w-3/4 mt-2 bg-[var(--color-bg-elevated)] rounded animate-pulse" />
+            <div className="h-3 w-full mt-2 bg-[var(--color-bg-elevated)] rounded animate-pulse" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="panel p-6 text-center">
+        <p className="text-sm text-[var(--color-text-dim)]">
+          No hay noticias disponibles. Verifica tu conexión.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
-      {placeholder.map((n, i) => (
+      {items.map((item, i) => (
         <article
-          key={n.id}
-          className={`panel panel-hover p-4 cursor-default animate-fade-in-up stagger-${i + 1}`}
+          key={item.id}
+          onClick={() => window.api.app.openExternal(item.url)}
+          className={`panel panel-hover p-4 cursor-pointer animate-fade-in-up stagger-${i + 1}`}
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-[10px] uppercase tracking-widest text-[var(--color-accent-dim)]">
-                {n.date}
+                {formatDate(item.date)}
               </p>
-              <h3 className="mt-1 font-display text-sm text-[var(--color-text)]">{n.title}</h3>
-              <p className="mt-1 text-xs text-[var(--color-text-dim)] leading-relaxed">
-                {n.excerpt}
+              <h3 className="mt-1 font-display text-sm text-[var(--color-text)]">{item.title}</h3>
+              <p className="mt-1 text-xs text-[var(--color-text-dim)] leading-relaxed line-clamp-3">
+                {item.excerpt}
               </p>
             </div>
             <ArrowUpRight
