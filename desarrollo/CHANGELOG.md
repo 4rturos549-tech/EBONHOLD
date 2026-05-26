@@ -6,6 +6,18 @@ Formato: el más reciente arriba.
 
 ---
 
+## 2026-05-26 — 0.1.0 · APIs reales + primera release del launcher
+
+- **API `/api/realms`** en la web: combina datos estáticos del config con jugadores online desde `acore_characters.characters` cuando hay BD conectada. CORS abierto, cache CDN 30s, fail-safe sin BD.
+- **API `/api/news`**: lee los devlogs de `/desarrollo/` (single source of truth) y devuelve título + fecha + excerpt + URL. Query param `?limit=N`. Cache 5min.
+- **Cliente HTTP del launcher** (`lib/api.ts`) con timeout 6s y graceful fallback.
+- **`RealmStatus.tsx`** auto-refresca cada 30s.
+- **`NewsList.tsx`** con skeleton loaders animados durante carga. Click en noticia abre el changelog en el navegador.
+- **brand.ts** apunta a la URL real (`https://ebonhold.vercel.app`).
+- Build verificado: web genera 43 rutas (41 estáticas + 2 funciones API), launcher sin errores.
+- **🚀 Tag `launcher-v0.1.0`**: dispara la primera release pública vía GitHub Actions (instaladores Win/Mac/Linux con auto-update).
+- Detalles ver [`2026-05-26-api-realms-news-release.md`](2026-05-26-api-realms-news-release.md).
+
 ## 2026-05-26 — 0.0.8 · Logo SVG profesional + iconos del instalador
 
 - **Logo SVG rediseñado** con 13 capas vectoriales: halo radial, diamante exterior con bevel metálico, doble borde inner, cripta obsidiana, anillo decorativo, mini-diamantes, sparkles de 8 puntas, halo bajo el shard, shard con facetas y líneas de talla, núcleo brillante triple-circle, cardinales con glow.

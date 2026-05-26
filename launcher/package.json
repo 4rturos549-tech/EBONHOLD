@@ -1,7 +1,6 @@
 {
   "name": "ebonhold-launcher",
   "version": "0.1.0",
-  "_bump": "0.1.0 first public release",
   "description": "Launcher oficial de Ebonhold — WoTLK 3.3.5a",
   "main": "out/main/index.js",
   "author": {
