@@ -6,6 +6,20 @@ Formato: el más reciente arriba.
 
 ---
 
+## 2026-05-26 — 0.0.8 · Logo SVG profesional + iconos del instalador
+
+- **Logo SVG rediseñado** con 13 capas vectoriales: halo radial, diamante exterior con bevel metálico, doble borde inner, cripta obsidiana, anillo decorativo, mini-diamantes, sparkles de 8 puntas, halo bajo el shard, shard con facetas y líneas de talla, núcleo brillante triple-circle, cardinales con glow.
+- **Pipeline pure-JS de generación** de iconos: `@resvg/resvg-js` + `png2icons`. Sin deps nativas → funciona en CI.
+- **Genera todos los formatos** desde un único SVG master:
+  - `icon.ico` Windows multi-size (16/24/32/48/64/128/256, ~422 KB)
+  - `icon.icns` macOS multi-size (16 hasta 1024, ~390 KB)
+  - `icon.png` 512×512 Linux
+  - `icon@1024.png` master para regenerar
+- Script ejecutable con `npm run icons`.
+- **Sincronizado** entre web y launcher: el mismo SVG master se embebe en `Logo.tsx` (web y launcher), `public/logo.svg`, `public/favicon.svg`.
+- electron-builder ya estaba configurado para usar estos archivos → la próxima release del launcher tendrá iconos perfectos.
+- Detalles ver [`2026-05-26-logo-pro-iconos.md`](2026-05-26-logo-pro-iconos.md).
+
 ## 2026-05-26 — 0.0.7 · Launcher Electron bootstrap
 
 - **Launcher de escritorio** completo: Electron + Vite + React 19 + TS + Tailwind v4 (mismo stack que la web).
