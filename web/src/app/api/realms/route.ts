@@ -22,14 +22,30 @@ export async function GET() {
     /* sin BD del core → todos offline */
   }
 
+  // Por ahora solo Acherus tiene worldserver. Wyrmrest y Crystalsong
+  // estan en la realmlist pero sin proceso → siempre offline.
+  // Cuando levantemos esos reinos, este map deberia llamar /stats/online?realmId=X.
+  const ACTIVE_REALM = "acherus";
+
   const result = configRealms.map((r) => {
-    const players = online[1]?.total ?? r.players;
-    const isOnline = players > 0;
+    if (r.id !== ACTIVE_REALM) {
+      return {
+        id: r.id,
+        name: r.name,
+        type: r.type,
+        status: "offline" as const,
+        players: 0,
+        population: r.population,
+        alliance: 0,
+        horde: 0,
+      };
+    }
+    const players = online[1]?.total ?? 0;
     return {
       id: r.id,
       name: r.name,
       type: r.type,
-      status: isOnline ? "online" : r.status,
+      status: (players > 0 ? "online" : "offline") as "online" | "offline",
       players,
       population: r.population,
       alliance: online[1]?.alliance ?? 0,
